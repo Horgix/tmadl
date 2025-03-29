@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+aws-config = "1.6.1"
+aws-sdk-s3 = "1.81.0"
+chrono = "0.4.40"
+tokio = { version = "1.44.1", features = ["macros", "rt"] }
