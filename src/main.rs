@@ -2,7 +2,9 @@ use std::env;
 
 mod domain;
 use domain::recording_store::RecordingStore;
-use domain::recording_store::S3RecordingStore;
+
+mod infrastructure;
+use infrastructure::s3_recording_store::S3RecordingStore;
 
 fn main() {
     println!("Hello, world!");
