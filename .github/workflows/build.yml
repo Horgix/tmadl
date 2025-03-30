@@ -1,0 +1,31 @@
+on: [push]
+
+name: Build
+
+jobs:
+  build:
+    name: Build binary (release mode)
+    # Improvement: run on an image including the Rust toolchain and a pinned
+    # version of it to avoid reinstalling it everytime through the
+    # `actions-rs/toolchain` Action
+    runs-on: ubuntu-latest 
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: (Restore) Cache(d) dependencies
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-rust-crates-v1 # Manually bump this if you want to rebuild dependencies while not changing the Cargo.lock file
+        with:
+          path: |
+            ./target/release/build
+            ./target/release/.cargo-lock
+            ./target/release/deps
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - run: cargo build --release --all-features
