@@ -8,8 +8,6 @@ use infrastructure::s3_recording_store::S3RecordingStore;
 use infrastructure::claude_summarizer::{self, summarize};
 
 fn main() {
-    println!("Hello, world!");
-    // Use a recordingstore
     let s3_bucket = env::var("MNDRP_S3_BUCKET_NAME").unwrap();
     let store = S3RecordingStore::new(&s3_bucket);
     let recordings = store.get_all();

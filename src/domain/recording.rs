@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 
 use crate::domain::transcription::Transcription;
 
-// Recording: a meeting or discussion recording that is stored in S3
 #[derive(Default, Debug)]
 pub struct Recording {
     pub id: String,

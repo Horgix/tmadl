@@ -8,7 +8,6 @@ use crate::domain::recording::Recording;
 static S3_RAW_RECORDINGS_PATH: &str = "raw-recordings/";
 
 pub struct S3RecordingStore {
-    // region: String,
     bucket: String,
     client: S3Client,
 }
