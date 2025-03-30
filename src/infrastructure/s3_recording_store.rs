@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use aws_config::BehaviorVersion;
 use aws_sdk_s3::Client as S3Client;
 use tokio;
@@ -25,6 +27,44 @@ impl S3RecordingStore {
             client: client,
         }
     }
+
+    fn recording_metadata_to_s3_tags(&self, recording: &Recording) -> Result<String, aws_sdk_s3::error::BuildError> {
+        let mut tags = HashMap::new();
+        tags.insert("recording_id".to_string(), recording.id.to_string());
+        if let Some(source) = &recording.source {
+            tags.insert("source".to_string(), source.to_string());
+        }
+        if let Some(date) = &recording.date { // As ISO 8601 to the second
+            tags.insert("date".to_string(), date.to_rfc3339_opts(chrono::SecondsFormat::Secs, true));
+        }
+        if let Some(duration) = &recording.duration {
+            tags.insert("duration".to_string(), duration.to_string());
+        }
+        if let Some(number_of_speakers) = &recording.number_of_speakers {
+            tags.insert("number_of_speakers".to_string(), number_of_speakers.to_string());
+        }
+        if let Some(language) = &recording.language {
+            tags.insert("language".to_string(), language.to_string());
+        }
+
+        let mut s3_tags = aws_sdk_s3::types::Tagging::builder();
+        for (key, value) in tags {
+            s3_tags = s3_tags.tag_set(
+                aws_sdk_s3::types::Tag::builder()
+                    .key(key)
+                    .value(value)
+                    .build()
+                    .unwrap()
+            );
+        }
+
+        Ok(s3_tags.build()?
+            .tag_set()
+            .iter()
+            .map(|tag| format!("{}={}", tag.key(), tag.value()))
+            .collect::<Vec<String>>()
+            .join("&"))
+    }
 }
 
 // Implement the RecordingStore trait for S3RecordingStore
@@ -35,7 +75,7 @@ impl RecordingStore for S3RecordingStore {
             .list_objects_v2()
             .bucket(self.bucket.to_owned())
             .prefix(S3_RAW_RECORDINGS_PATH)
-            .max_keys(10) // In this example, go 10 at a time.
+            .max_keys(10)
             .into_paginator()
             .send();
 
@@ -63,5 +103,27 @@ impl RecordingStore for S3RecordingStore {
             }
         }
         recordings
+    }
+
+    #[tokio::main(flavor = "current_thread")]
+    async fn send_local_recording(&self, recording: &Recording, file_path: &str) -> Result<(), String> {
+        let content = aws_sdk_s3::primitives::ByteStream::from_path(std::path::Path::new(file_path)).await;
+        let tags = self.recording_metadata_to_s3_tags(recording);
+        println!("Tags: {:?}", tags);
+
+        let file_name = format!("{}{}.mp3", S3_RAW_RECORDINGS_PATH, recording.id);
+        let result = self.client
+            .put_object()
+            .bucket(self.bucket.to_owned())
+            .key(file_name)
+            .tagging(tags.unwrap())
+            .body(content.unwrap())
+            .send()
+            .await;
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(err) => Err(format!("Failed to upload recording to S3: {err}")),
+        } 
     }
 }

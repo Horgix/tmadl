@@ -5,7 +5,7 @@ use std::path::Path;
 use chrono::DateTime;
 use crate::domain::recording::Recording;
 
-pub fn ingest_local_mp3_file(file_path: &str) -> Result<(), Box<dyn Error>> {
+pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Result<Recording, Box<dyn Error>> {
     // Use the file basename as the recording ID by default, but prompt user for a different ID if desired
     let file_name = Path::new(file_path).file_name().unwrap().to_str().unwrap();
     let recording_id = file_name.split('.').next().unwrap().to_string();
@@ -20,9 +20,22 @@ pub fn ingest_local_mp3_file(file_path: &str) -> Result<(), Box<dyn Error>> {
     };
 
     // Use the file creation timedate as the recording time
+    // Only keep the date and time part to the minute in ISO 8601 format.
     let metadata = fs::metadata(file_path)?;
     let created_at = DateTime::from(metadata.created().unwrap());
-    println!("Recording created at: {:?}", created_at);
+    let shortened_created_at = created_at.format("%Y-%m-%dT%H:%M:%S").to_string();
+    println!("Recording created at: {}", shortened_created_at);
+
+    // Prompt user for recording source. Default to "Google Meet"
+    println!("Recording source (default: gmeet):");
+    let mut source = String::new();
+    io::stdin().read_line(&mut source)?;
+    let source = if source.trim().is_empty() {
+        "gmeet".to_string()
+    } else {
+        source.trim().to_string()
+    };
+    println!("Recording source: {}", source);
 
     // Prompt user for the number of speakers in the recording
     println!("How many speakers are in the recording?");
@@ -30,20 +43,27 @@ pub fn ingest_local_mp3_file(file_path: &str) -> Result<(), Box<dyn Error>> {
     io::stdin().read_line(&mut number_of_speakers)?;
     let number_of_speakers = number_of_speakers.trim().parse::<i32>().unwrap();
 
-    // Prompt user for the language of the recording
-    println!("What language is the recording in?");
+    // Prompt user for the language of the recording. Default to "English"
+    println!("What language is the recording in? (default: English)");
     let mut language = String::new();
     io::stdin().read_line(&mut language)?;
-    let language = language.trim().to_string();
+    let language = if language.trim().is_empty() {
+        "English".to_string()
+    } else {
+        language.trim().to_string()
+    };
+    println!("Recording language: {}", language);
 
     let recording = Recording {
         id: recording_id,
-        source: Some(file_path.to_string()),
+        source: Some(source),
         date: Some(created_at),
+        duration: Some(0), // TODO (Placeholder for duration)
         number_of_speakers: Some(number_of_speakers),
         language: Some(language),
-        ..Default::default()
+        transcription: None, // TODO (Placeholder for transcription)
     };
     println!("Recording: {:?}", recording);
-    return Ok(());
+
+    Ok(recording)
 }
