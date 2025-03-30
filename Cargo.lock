@@ -151,6 +151,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-bedrockruntime"
+version = "1.79.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45604b174cb17e533544330fbf6cdddf0dc0459c9a99753aedb207ca16b91391"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-eventstream",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand",
+ "http 0.2.12",
+ "once_cell",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-s3"
 version = "1.81.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1550,8 +1574,10 @@ name = "mndrp"
 version = "0.1.0"
 dependencies = [
  "aws-config",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-s3",
  "chrono",
+ "serde_json",
  "tokio",
 ]
 
@@ -1984,6 +2010,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.140"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20068b6e96dc6c9bd23e01df8827e6c7e1f2fddd43c21810382803c136b99373"
+dependencies = [
+ "itoa",
+ "memchr",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

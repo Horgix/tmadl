@@ -5,7 +5,7 @@ use domain::recording_store::RecordingStore;
 
 mod infrastructure;
 use infrastructure::s3_recording_store::S3RecordingStore;
-use infrastructure::claude_summarizer::summarize;
+use infrastructure::claude_summarizer::{self, summarize};
 
 fn main() {
     println!("Hello, world!");
@@ -17,5 +17,8 @@ fn main() {
         println!("Recording: {:?}", recording);
     }
 
-    summarize();
+    let input = summarize();
+    let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
+    claude_summarizer.summarize(input.as_str());
+
 }
