@@ -2,8 +2,12 @@ use aws_config::BehaviorVersion;
 use aws_sdk_s3::{Client, Error};
 use tokio::runtime::Runtime;
 use tokio;
+use std::collections::HashMap;
 
 use crate::domain::recording_store::RecordingStore;
+use crate::domain::recording::Recording;
+
+static S3_RAW_RECORDINGS_PATH: &str = "raw-recordings/";
 
 pub struct S3RecordingStore {
     // region: String,
@@ -30,26 +34,38 @@ impl S3RecordingStore {
 impl RecordingStore for S3RecordingStore {
 
     #[tokio::main(flavor = "current_thread")]
-    async fn get_all(&self) -> Vec<String> {
+    async fn get_all(&self) -> Vec<Recording> {
         let mut response = self.client
             .list_objects_v2()
             .bucket(self.bucket.to_owned())
+            .prefix(S3_RAW_RECORDINGS_PATH)
             .max_keys(10) // In this example, go 10 at a time.
             .into_paginator()
             .send();
 
+        let mut recordings : Vec<Recording> = Vec::new();
         while let Some(result) = response.next().await {
             match result {
                 Ok(output) => {
-                    for object in output.contents() {
-                        println!(" - {}", object.key().unwrap_or("Unknown"));
-                    }
+                    let current_recordings = output.contents().iter().filter_map(|object| {
+                        if object.key().unwrap_or_default() != S3_RAW_RECORDINGS_PATH {
+                            Some(
+                                Recording{
+                                    id: object.key().unwrap().to_owned(),
+                                    ..Default::default()
+                                }
+                            )
+                        } else {
+                            None
+                        }
+                    }).collect::<Vec<Recording>>();
+                    recordings.extend(current_recordings);
                 }
                 Err(err) => {
                     eprintln!("Failed to fetch recording list from S3 objects: {err:?}")
                 }
             }
         }
-        Vec::new()
+        recordings
     }
 }

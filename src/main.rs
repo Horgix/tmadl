@@ -13,6 +13,6 @@ fn main() {
     let store = S3RecordingStore::new(&s3_bucket);
     let recordings = store.get_all();
     for recording in recordings {
-        println!("Recording: {}", recording);
+        println!("Recording: {:?}", recording);
     }
 }
