@@ -22,20 +22,6 @@ TODO");
     prompt
 }
 
-// Claude requires the "Anthropic Claude Messages API" format,
-// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html
-// let messages = [
-//     {
-//         "role": "user",
-//         "content": [
-//             {
-//                 "type": "text",
-//                 "text": "TODO_PROMPT_REF"
-//             }
-//         ]
-//     }
-// ]
-
 pub struct ClaudeSummarizer {
     client: BedrockClient,
     model: String,
@@ -57,7 +43,10 @@ impl ClaudeSummarizer {
 
     #[tokio::main(flavor = "current_thread")]
     pub async fn summarize(&self, input: &str) -> String {
-        // Whelp, nevermind. invoke_model cannot directly take a Message as
+        // Claude requires the "Anthropic Claude Messages API" format,
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html
+        //
+        // In the Rust SDK, invoke_model cannot directly take a Message as
         // input, it needs a Blob. Plus, the InvokeModelRequest builder doesn't
         // exist in the aws_sdk_bedrockruntime crate.
         // The cleanest solution would be to implement JSON serialization using
