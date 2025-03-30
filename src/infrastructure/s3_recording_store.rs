@@ -84,7 +84,7 @@ impl RecordingStore for S3RecordingStore {
             match result {
                 Ok(output) => {
                     let current_recordings = output.contents().iter().filter_map(|object| {
-                        if object.key().unwrap_or_default() != S3_RAW_RECORDINGS_PATH {
+                        if object.key().unwrap_or_default() != S3_RAW_RECORDINGS_PATH { // Skip the directory itself
                             Some(
                                 Recording{
                                     id: object.key().unwrap().to_owned(),
@@ -99,6 +99,32 @@ impl RecordingStore for S3RecordingStore {
                 }
                 Err(err) => {
                     eprintln!("Failed to fetch recording list from S3 objects: {err:?}")
+                }
+            }
+        }
+        // Get the metadata for each recording from S3 tags
+        for recording in &mut recordings {
+            let object_tags = self.client
+                .get_object_tagging()
+                .bucket(self.bucket.to_owned())
+                .key(recording.id.to_owned())
+                .send()
+                .await;
+            match object_tags {
+                Ok(tags) => {
+                    for tag in tags.tag_set() {
+                        match tag.key() {
+                            "source" => recording.source = Some(tag.value().to_string()),
+                            "date" => recording.date = Some(tag.value().parse::<chrono::DateTime<chrono::Utc>>().unwrap()),
+                            "duration" => recording.duration = Some(tag.value().parse::<i32>().unwrap()),
+                            "number_of_speakers" => recording.number_of_speakers = Some(tag.value().parse::<i32>().unwrap()),
+                            "language" => recording.language = Some(tag.value().to_string()),
+                            _ => {}
+                        }
+                    }
+                }
+                Err(err) => {
+                    eprintln!("Failed to fetch tags for recording {}: {err:?}", recording.id);
                 }
             }
         }
