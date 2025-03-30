@@ -1,5 +1,5 @@
 use aws_config::BehaviorVersion;
-use aws_sdk_s3::Client;
+use aws_sdk_s3::Client as S3Client;
 use tokio;
 
 use crate::domain::recording_store::RecordingStore;
@@ -10,7 +10,7 @@ static S3_RAW_RECORDINGS_PATH: &str = "raw-recordings/";
 pub struct S3RecordingStore {
     // region: String,
     bucket: String,
-    client: Client,
+    client: S3Client,
 }
 
 impl S3RecordingStore {
@@ -19,7 +19,7 @@ impl S3RecordingStore {
         let config = aws_config::defaults(BehaviorVersion::latest())
                 .load()
                 .await;
-        let client = Client::new(&config);
+        let client = S3Client::new(&config);
 
         S3RecordingStore {
             bucket: bucket.to_owned(),
