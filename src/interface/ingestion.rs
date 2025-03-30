@@ -2,12 +2,10 @@ use std::error::Error;
 use std::fs;
 use std::io;
 use std::path::Path;
-use std::time::{SystemTime, Duration};
-use chrono::{DateTime, Utc, NaiveDateTime};
+use chrono::DateTime;
 use crate::domain::recording::Recording;
 
 pub fn ingest_local_mp3_file(file_path: &str) -> Result<(), Box<dyn Error>> {
-
     // Use the file basename as the recording ID by default, but prompt user for a different ID if desired
     let file_name = Path::new(file_path).file_name().unwrap().to_str().unwrap();
     let recording_id = file_name.split('.').next().unwrap().to_string();

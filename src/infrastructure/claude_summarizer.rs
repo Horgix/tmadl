@@ -1,6 +1,5 @@
 use aws_config::BehaviorVersion;
 use aws_sdk_bedrockruntime::Client as BedrockClient;
-use aws_sdk_bedrockruntime::types::{ContentBlock, ConversationRole, Message};
 use aws_sdk_s3::primitives::Blob;
 use serde_json::json;
 
@@ -95,7 +94,7 @@ impl ClaudeSummarizer {
 
         let response = self.client
             .invoke_model()
-            .model_id(MODEL)
+            .model_id(self.model.to_owned())
             .body(Blob::new(model_parameters.to_string().as_bytes().to_vec()))
             .send()
             .await;
