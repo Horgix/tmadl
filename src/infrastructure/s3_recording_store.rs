@@ -1,8 +1,6 @@
 use aws_config::BehaviorVersion;
-use aws_sdk_s3::{Client, Error};
-use tokio::runtime::Runtime;
+use aws_sdk_s3::Client;
 use tokio;
-use std::collections::HashMap;
 
 use crate::domain::recording_store::RecordingStore;
 use crate::domain::recording::Recording;
