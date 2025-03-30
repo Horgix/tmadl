@@ -5,6 +5,7 @@ use domain::recording_store::RecordingStore;
 
 mod infrastructure;
 use infrastructure::s3_recording_store::S3RecordingStore;
+use infrastructure::claude_summarizer::summarize;
 
 fn main() {
     println!("Hello, world!");
@@ -15,4 +16,6 @@ fn main() {
     for recording in recordings {
         println!("Recording: {:?}", recording);
     }
+
+    summarize();
 }

@@ -32,7 +32,6 @@ impl S3RecordingStore {
 
 // Implement the RecordingStore trait for S3RecordingStore
 impl RecordingStore for S3RecordingStore {
-
     #[tokio::main(flavor = "current_thread")]
     async fn get_all(&self) -> Vec<Recording> {
         let mut response = self.client
