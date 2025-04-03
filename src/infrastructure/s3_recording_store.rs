@@ -43,6 +43,9 @@ impl S3RecordingStore {
         if let Some(number_of_speakers) = &recording.number_of_speakers {
             tags.insert("number_of_speakers".to_string(), number_of_speakers.to_string());
         }
+        if let Some(description) = &recording.description {
+            tags.insert("description".to_string(), description.to_string());
+        }
         if let Some(language) = &recording.language {
             tags.insert("language".to_string(), language.to_string());
         }

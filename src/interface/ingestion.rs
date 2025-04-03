@@ -43,6 +43,16 @@ pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Resul
     io::stdin().read_line(&mut number_of_speakers)?;
     let number_of_speakers = number_of_speakers.trim().parse::<i32>().unwrap();
 
+    // Prompt user for the description of the recording. Default to None
+    println!("What is the description of the recording?");
+    let mut description = String::new();
+    io::stdin().read_line(&mut description)?;
+    let description = if description.trim().is_empty() {
+        None
+    } else {
+        Some(description.trim().to_string())
+    };
+
     // Prompt user for the language of the recording. Default to "English"
     println!("What language is the recording in? (default: English)");
     let mut language = String::new();
@@ -61,6 +71,7 @@ pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Resul
         duration: Some(0), // TODO (Placeholder for duration)
         number_of_speakers: Some(number_of_speakers),
         language: Some(language),
+        description,
         transcription: None, // TODO (Placeholder for transcription)
     };
     println!("Recording: {:?}", recording);
