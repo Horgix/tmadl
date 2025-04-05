@@ -67,7 +67,7 @@ pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Resul
     let recording = Recording {
         id: recording_id,
         source: Some(source),
-        date: Some(created_at),
+        date_time: Some(created_at),
         duration: Some(0), // TODO (Placeholder for duration)
         number_of_speakers: Some(number_of_speakers),
         language: Some(language),

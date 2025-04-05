@@ -34,7 +34,7 @@ impl S3RecordingStore {
         if let Some(source) = &recording.source {
             tags.insert("source".to_string(), source.to_string());
         }
-        if let Some(date) = &recording.date { // As ISO 8601 to the second
+        if let Some(date) = &recording.date_time { // As ISO 8601 to the second
             tags.insert("date".to_string(), date.to_rfc3339_opts(chrono::SecondsFormat::Secs, true));
         }
         if let Some(duration) = &recording.duration {
@@ -118,7 +118,7 @@ impl RecordingStore for S3RecordingStore {
                     for tag in tags.tag_set() {
                         match tag.key() {
                             "source" => recording.source = Some(tag.value().to_string()),
-                            "date" => recording.date = Some(tag.value().parse::<chrono::DateTime<chrono::Utc>>().unwrap()),
+                            "date" => recording.date_time = Some(tag.value().parse::<chrono::DateTime<chrono::Utc>>().unwrap()),
                             "duration" => recording.duration = Some(tag.value().parse::<i32>().unwrap()),
                             "number_of_speakers" => recording.number_of_speakers = Some(tag.value().parse::<i32>().unwrap()),
                             "language" => recording.language = Some(tag.value().to_string()),

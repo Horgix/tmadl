@@ -6,7 +6,7 @@ use crate::domain::transcription::Transcription;
 pub struct Recording {
     pub id: String,
     pub source: Option<String>,
-    pub date: Option<DateTime<Utc>>,
+    pub date_time: Option<DateTime<Utc>>,
     pub duration: Option<i32>, // Duration in seconds
     pub number_of_speakers: Option<i32>,
     pub language: Option<String>,
