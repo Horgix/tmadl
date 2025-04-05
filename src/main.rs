@@ -2,6 +2,7 @@ use std::env;
 use clap::{Parser, Subcommand};
 
 mod domain;
+use domain::recording::Recording;
 use domain::recording_store::RecordingStore;
 
 mod infrastructure;
@@ -71,10 +72,25 @@ fn main() {
         println!("Recording: {:?}", recording);
     }
 
+    let mock_recording = Recording{
+        id: "123".to_string(),
+        source: Some("local".to_string()),
+        date_time: Some(chrono::Utc::now()),
+        duration: Some(3600),
+        number_of_speakers: Some(2),
+        language: Some("English".to_string()),
+        description: Some("Meeting with the team".to_string()),
+        transcription: None,
+    };
     // store.send_local_recording(&recording.unwrap(), "/tmp/foo.mp3").unwrap();
 
-    let input = summarize();
-    let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
-    claude_summarizer.summarize(input.as_str());
+    let input = summarize(
+        domain::summary::SummaryRequest {
+            recording: mock_recording,
+            additional_context: None,
+        }
+    );
+    //let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
+    //claude_summarizer.summarize(input.as_str());
 
 }

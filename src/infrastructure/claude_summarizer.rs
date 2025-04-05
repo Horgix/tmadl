@@ -3,21 +3,51 @@ use aws_sdk_bedrockruntime::Client as BedrockClient;
 use aws_sdk_s3::primitives::Blob;
 use serde_json::json;
 
+use crate::domain::recording::Recording;
+use crate::domain::summary::SummaryRequest;
+
 static MODEL : &str = "eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
 
 static PROMPT_FRAGMENT_GENERIC_SUMMARY_REQUEST: &str = r#"Summarize the following transcript into clear and readable bullet points with a couple of paragraphs around to introduce the topic and wrap it up."#;
 static PROMPT_FRAGMENT_MULTI_SPEAKERS: &str = r#"Speakers in the transcript could be denoted by their name, or by "spk_x", where `x` is a number. These represent distinct speakers in the conversation. When you refer to a speaker, you may refer to them by "Speaker 1" #in the case of "spk_1", "Speaker 2" in the case of "spk_2", and so forth."#;
 static PROMPT_FRAGMENT_SINGLE_SPEAKER: &str = r#"The transcript features a single speaker who recorded themselves in order to get a transcribe and summary."#;
+static PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX: &str = r#"Additional notes for you to take into account:"#;
 
-pub fn summarize() -> String {
+pub fn summarize(summary_request: SummaryRequest) -> String {
+    // If the summary_request's recording contains a description, or if theyre's
+    // any additional_context, build a list of strings merging both into a  ist with '- ' as a string
+    // and join them with '\n' to create a bullet point list.
+    let additional_notes =  if  summary_request.recording.description.is_some() || summary_request.additional_context.is_some() {
+        let description_note = match summary_request.recording.description {
+            Some(description) => {
+                vec![format!("This recording is about: {}", description)]
+            },
+            None => {
+                vec![]
+            }
+        };
+        let list_of_additional_notes = [
+            description_note,
+            summary_request.additional_context.unwrap_or(vec![])
+            ].concat()
+            .iter()
+            .map(|note| format!("- {}", note))
+            .collect::<Vec<String>>()
+            .join("\n");
+        format!("{}\n{}", PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX, list_of_additional_notes)
+        } else {
+            "".to_string()
+        };
+
     //format!("Model: {}", MODEL)
     let prompt = format!("
 {PROMPT_FRAGMENT_GENERIC_SUMMARY_REQUEST}
 {PROMPT_FRAGMENT_MULTI_SPEAKERS}
-    
-Transcript:
-TODO");
+{additional_notes}
 
+Transcript:
+TODO
+");
     println!("{}", prompt);
     prompt
 }
