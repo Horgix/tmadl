@@ -1,6 +1,7 @@
 # TMA;DL - Too Much Audio, Didn't Listen
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Horgix/tmadl/build.yml)
+![GitHub License (MIT)](https://img.shields.io/github/license/Horgix/tmadl)
 
 `tmadl` is a meetings & discussions recordings processor.
 
