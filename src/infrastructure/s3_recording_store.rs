@@ -151,7 +151,7 @@ impl RecordingStore for S3RecordingStore {
 
         match result {
             Ok(_) => Ok(()),
-            Err(err) => Err(format!("Failed to upload recording to S3: {err}")),
+            Err(err) => Err(format!("Failed to upload recording to S3: {:?}", err)),
         } 
     }
 }
