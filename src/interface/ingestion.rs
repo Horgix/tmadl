@@ -25,6 +25,20 @@ pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Resul
     let created_at = DateTime::from(metadata.created().unwrap());
     let shortened_created_at = created_at.format("%Y-%m-%dT%H:%M:%S").to_string();
     println!("Recording created at: {}", shortened_created_at);
+    // Prompt user for a different date and time if desired
+    println!("Press Enter to use this date and time, or type a new one and press Enter");
+    let mut new_date_time = String::new();
+    io::stdin().read_line(&mut new_date_time)?;
+    let created_at = if new_date_time.trim().is_empty() {
+        created_at
+    } else {
+        let new_date_time = new_date_time.trim();
+        // Interpret it as UTC
+        let new_date_time = DateTime::parse_from_rfc3339(new_date_time)?;
+        new_date_time.with_timezone(&chrono::Utc)
+    };
+    println!("Recording date and time: {}", created_at);
+
 
     // Prompt user for recording source. Default to "Google Meet"
     println!("Recording source (default: gmeet):");
