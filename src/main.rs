@@ -31,6 +31,7 @@ struct TmadlCli {
 /// Top-level subcommands
 #[derive(Subcommand, Debug)]
 enum TmadlSubcommands {
+    /// Upload a local recording to S3
     Upload {
         /// File path of the local recording
         #[arg(long, value_name = "FILE_PATH", help = "Path to the local recording file")]
@@ -47,22 +48,22 @@ enum TmadlSubcommands {
 
 fn main() {
 
-    // let cli = TmadlCli::parse();
+    let cli = TmadlCli::parse();
 
-    // // When using upload, call ingestion parse recording etc
-    // match &cli.command {
-    //     Some(TmadlSubcommands::Upload { path }) => {
-    //         println!("Uploading recording from path: {}", path);
-    //         let recording = ingestion::parse_recording_information_from_local_mp3_file(path);
-    //         let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
-    //         let store = S3RecordingStore::new(&s3_bucket);
-    //         store.send_local_recording(&recording.unwrap(), path).unwrap();
-    //     }
-    //     _ => {
-    //         // Not implemented
-    //         println!("No subcommand provided or not implemented yet.");
-    //     }
-    // }
+    // When using upload, call ingestion parse recording etc
+    match &cli.command {
+        Some(TmadlSubcommands::Upload { path }) => {
+            println!("Uploading recording from path: {}", path);
+            let recording = ingestion::parse_recording_information_from_local_mp3_file(path);
+            let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
+            let store = S3RecordingStore::new(&s3_bucket);
+            store.send_local_recording(&recording.unwrap(), path).unwrap();
+        }
+        _ => {
+            // Not implemented
+            println!("No subcommand provided or not implemented yet.");
+        }
+    }
 
     // let recording = ingestion::parse_recording_information_from_local_mp3_file("/tmp/foo.mp3");
     let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
