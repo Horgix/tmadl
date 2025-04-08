@@ -61,14 +61,11 @@ fn main() {
             let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
             let store = S3RecordingStore::new(&s3_bucket);
             let mut recordings = store.get_all();
-            // for recording in recordings {
-            //     println!("Recording: {:?}", recording);
-            // }
-            // Sort recordings by date
+
+            // Sort recordings by date (descending)
             recordings.sort_unstable_by_key(|r| r.date_time);
             recordings.reverse();
-            let table = Table::new(recordings)
-                .to_string();
+            let table = Table::new(recordings).to_string();
             println!("{}", table);
 
         }
