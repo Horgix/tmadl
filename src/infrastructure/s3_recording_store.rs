@@ -116,11 +116,13 @@ impl RecordingStore for S3RecordingStore {
                 Ok(tags) => {
                     for tag in tags.tag_set() {
                         match tag.key() {
+                            "recording_id" => recording.id = tag.value().to_string(),
                             "source" => recording.source = Some(tag.value().to_string()),
                             "date" => recording.date_time = Some(tag.value().parse::<chrono::DateTime<chrono::Utc>>().unwrap()),
                             "duration" => recording.duration = Some(tag.value().parse::<i32>().unwrap()),
                             "number_of_speakers" => recording.number_of_speakers = Some(tag.value().parse::<i32>().unwrap()),
                             "language" => recording.language = Some(tag.value().to_string()),
+                            "description" => recording.description = Some(tag.value().to_string()),
                             _ => {}
                         }
                     }
