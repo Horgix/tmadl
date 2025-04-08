@@ -1,5 +1,6 @@
 use std::env;
 use clap::{Parser, Subcommand};
+use tabled::{Tabled, Table};
 
 mod domain;
 use domain::recording::Recording;
@@ -31,6 +32,9 @@ struct TmadlCli {
 /// Top-level subcommands
 #[derive(Subcommand, Debug)]
 enum TmadlSubcommands {
+    /// List all recordings (and their transcription statuses TODO)
+    List {},
+
     /// Upload a local recording to S3
     Upload {
         /// File path of the local recording
@@ -52,6 +56,22 @@ fn main() {
 
     // When using upload, call ingestion parse recording etc
     match &cli.command {
+        Some(TmadlSubcommands::List {}) => {
+            println!("Listing all recordings...");
+            let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
+            let store = S3RecordingStore::new(&s3_bucket);
+            let mut recordings = store.get_all();
+            // for recording in recordings {
+            //     println!("Recording: {:?}", recording);
+            // }
+            // Sort recordings by date
+            recordings.sort_unstable_by_key(|r| r.date_time);
+            recordings.reverse();
+            let table = Table::new(recordings)
+                .to_string();
+            println!("{}", table);
+
+        }
         Some(TmadlSubcommands::Upload { path }) => {
             println!("Uploading recording from path: {}", path);
             let recording = ingestion::parse_recording_information_from_local_mp3_file(path);
@@ -63,14 +83,6 @@ fn main() {
             // Not implemented
             println!("No subcommand provided or not implemented yet.");
         }
-    }
-
-    // let recording = ingestion::parse_recording_information_from_local_mp3_file("/tmp/foo.mp3");
-    let s3_bucket = env::var("TMADL_S3_BUCKET_NAME").unwrap();
-    let store = S3RecordingStore::new(&s3_bucket);
-    let recordings = store.get_all();
-    for recording in recordings {
-        println!("Recording: {:?}", recording);
     }
 
     let mock_recording = Recording{
