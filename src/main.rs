@@ -8,7 +8,7 @@ use domain::recording_store::RecordingStore;
 
 mod infrastructure;
 use infrastructure::s3_recording_store::S3RecordingStore;
-use infrastructure::claude_summarizer::{self, summarize};
+use infrastructure::claude_summarizer::{self, get_prompt};
 
 mod interface;
 use interface::ingestion;
@@ -48,6 +48,13 @@ enum TmadlSubcommands {
         #[arg(long, value_name = "FILE_PATH", help = "Path to save the recording")]
         path: String,
     },
+
+    /// Interrogate a transcription
+    Ask {
+        /// The transcription to interrogate
+        #[arg(long, value_name = "TRANSCRIPTION", help = "The transcription to interrogate")]
+        transcription: String,
+    }
 }
 
 fn main() {
@@ -76,31 +83,33 @@ fn main() {
             let store = S3RecordingStore::new(&s3_bucket);
             store.send_local_recording(&recording.unwrap(), path).unwrap();
         }
+        Some(TmadlSubcommands::Ask { transcription }) => {
+            println!("Interrogating transcription: {}", transcription);
+            let mock_recording = Recording{
+                id: "FIXME_THIS_IS_A_PLACEHOLDER".to_string(),
+                source: Some("PLACEHOLDER".to_string()),
+                date_time: Some(chrono::Utc::now()),
+                duration: Some(3600),
+                number_of_speakers: Some(2),
+                language: Some("French".to_string()),
+                description: Some("FIXME_THIS_IS_A_PLACEHOLDER".to_string()),
+                transcription: None,
+            };
+
+            let input = get_prompt(
+                domain::summary::SummaryRequest {
+                    recording: mock_recording,
+                    additional_context: Some(vec![
+                        "FIXME_THIS_IS_A_PLACEHOLDER".to_string(),
+                    ]),
+                }
+            );
+            let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
+            claude_summarizer.summarize(input.as_str());
+        }
         _ => {
             // Not implemented
             println!("No subcommand provided or not implemented yet.");
         }
     }
-
-    let mock_recording = Recording{
-        id: "123".to_string(),
-        source: Some("local".to_string()),
-        date_time: Some(chrono::Utc::now()),
-        duration: Some(3600),
-        number_of_speakers: Some(2),
-        language: Some("English".to_string()),
-        description: Some("Meeting with the team".to_string()),
-        transcription: None,
-    };
-    // store.send_local_recording(&recording.unwrap(), "/tmp/foo.mp3").unwrap();
-
-    let input = summarize(
-        domain::summary::SummaryRequest {
-            recording: mock_recording,
-            additional_context: None,
-        }
-    );
-    //let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
-    //claude_summarizer.summarize(input.as_str());
-
 }

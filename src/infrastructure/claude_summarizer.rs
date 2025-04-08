@@ -13,7 +13,7 @@ static PROMPT_FRAGMENT_MULTI_SPEAKERS: &str = r#"Speakers in the transcript coul
 static PROMPT_FRAGMENT_SINGLE_SPEAKER: &str = r#"The transcript features a single speaker who recorded themselves in order to get a transcribe and summary."#;
 static PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX: &str = r#"Additional notes for you to take into account:"#;
 
-pub fn summarize(summary_request: SummaryRequest) -> String {
+pub fn get_prompt(summary_request: SummaryRequest) -> String {
     // If the summary_request's recording contains a description, or if theyre's
     // any additional_context, build a list of strings merging both into a  ist with '- ' as a string
     // and join them with '\n' to create a bullet point list.
@@ -111,12 +111,14 @@ impl ClaudeSummarizer {
                 "top_k": 40,
             });
 
+        print!("Model parameters: {}", model_parameters.to_string());
         let response = self.client
             .invoke_model()
             .model_id(self.model.to_owned())
             .body(Blob::new(model_parameters.to_string().as_bytes().to_vec()))
             .send()
             .await;
+        println!("Response: {:?}", response);
 
         match response {
             Ok(output) => {
