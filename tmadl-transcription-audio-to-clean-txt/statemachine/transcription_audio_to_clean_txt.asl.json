@@ -1,0 +1,146 @@
+{
+    "Comment": "Transcribes recordings and generates summaries",
+    "StartAt": "CheckAndCleanS3NotificationEvent",
+    "States": {
+        "CheckAndCleanS3NotificationEvent": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Next": "GetObjectTagging",
+                    "And": [
+                        {
+                            "Variable": "$.Records",
+                            "IsPresent": true
+                        },
+                        {
+                            "Variable": "$.Records[1]",
+                            "IsPresent": false
+                        },
+                        {
+                            "Variable": "$.Records[0].s3",
+                            "IsPresent": true
+                        },
+                        {
+                            "Variable": "$.Records[0].eventName",
+                            "StringMatches": "ObjectCreated:*"
+                        }
+                    ]
+                }
+            ],
+            "OutputPath": "$.Records[0].s3",
+            "Comment": "Check that the received event is an `ObjectCreated` one from S3, and that it contains only exactly what we expect. Also only keeps the subelement we really care about for next steps (the `s3` part)."
+        },
+        "GetObjectTagging": {
+            "Type": "Task",
+            "Parameters": {
+                "Bucket.$": "$.bucket.name",
+                "Key.$": "$.object.key"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:s3:getObjectTagging",
+            "Next": "FckingFlattenTags",
+            "ResultPath": "$.tags",
+            "Comment": "Get the tags of the object that was uploaded"
+        },
+        "FckingFlattenTags": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${FlattenS3TagSetLambdaArn}:$LATEST"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                    ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2,
+                    "JitterStrategy": "FULL"
+                }
+            ],
+            "Next": "Start Transcription Job"
+        },
+        "Start Transcription Job": {
+            "Type": "Task",
+            "Parameters": {
+                "Media": {
+                    "MediaFileUri.$": "States.Format('s3://{}/{}', $.bucket.name, $.object.key)"
+                },
+                "TranscriptionJobName.$": "States.Format('horgix-transcription_{}_{}', $.tags.recording_id, States.UUID())",
+                "OutputBucketName.$": "$.bucket.name",
+                "OutputKey.$": "States.Format('transcriptions/{}.json', 'YAY')",
+                "LanguageCode": "fr-FR",
+                "Settings": {
+                    "ShowSpeakerLabels": true,
+                    "MaxSpeakerLabels.$": "$.tags.number_of_speakers"
+                }
+            },
+            "Resource": "arn:aws:states:::aws-sdk:transcribe:startTranscriptionJob",
+            "Next": "Wait for Transcription Job",
+            "ResultPath": "$.TranscriptionJob"
+        },
+        "Wait for Transcription Job": {
+            "Type": "Wait",
+            "Seconds": 30,
+            "Next": "Get Transcription Job Status"
+        },
+        "Get Transcription Job Status": {
+            "Type": "Task",
+            "Parameters": {
+                "TranscriptionJobName.$": "$.TranscriptionJob.TranscriptionJob.TranscriptionJobName"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:transcribe:getTranscriptionJob",
+            "Next": "Transcription Job Status",
+            "ResultPath": "$.TranscriptionJob"
+        },
+        "Transcription Job Status": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.TranscriptionJob.TranscriptionJob.TranscriptionJobStatus",
+                    "StringEquals": "COMPLETED",
+                    "Next": "Format Transcription"
+                },
+                {
+                    "Variable": "$.TranscriptionJob.TranscriptionJob.TranscriptionJobStatus",
+                    "StringEquals": "FAILED",
+                    "Next": "Process Failed"
+                }
+            ],
+            "Default": "Wait for Transcription Job"
+        },
+        "Format Transcription": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${TranscriptionToCleanTxtLambdaArn}:$LATEST"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                    ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                }
+            ],
+            "Next": "Success"
+        },
+        "Success": {
+            "Type": "Succeed"
+        },
+        "Process Failed": {
+            "Type": "Fail"
+        }
+    }
+}

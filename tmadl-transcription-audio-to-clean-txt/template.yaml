@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  tmadl-transcription-audio-to-clean-txt
+
+  Lambdas and Step Function workflow to:
+  - Take an audio file from S3
+  - Transcribe it using AWS Transcribe
+  - Clean the JSON resulting from AWS Transcribe into a cleaner per-speaker text file
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Tracing: Active
+    LoggingConfig:
+      LogFormat: JSON
+  Api:
+    TracingEnabled: true
+Parameters
+  BucketName:
+    Type: String
+
+Resources:
+  TriggerTranscriptionStateMachineEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: audio-upload-to-s3-trigger-stepfunction
+      Description: Invokes the summary generator state machine when a recording is
+        put in the asset bucket recordings folder
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AudioToCleanTxtTranscription.Arn
+          Id: InvokeSummaryGeneratorStateMachine
+          RoleArn: !GetAtt TriggerSummaryGeneratorStateMachineEventRuleRole.Arn
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref AssetBucket
+          object:
+            key:
+              - prefix: raw-recordings/
+
+  FlattenS3TagSetLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/flatten_s3_tagset/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+
+  TranscriptionToCleanTxtLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/aws_transcription_to_clean_txt/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Timeout: 30
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:getObject
+            Resource: arn:aws:s3:::some-bucket-name/raw-recordings/*
+      - Statement:
+          Effect: Allow
+          Action:
+            - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
+            - s3:GetObject # For the lambda to read the transcription file
+            - s3:HeadObject # For the lambda to read the transcription file
+          Resource: arn:aws:s3:::some-bucket-name/transcriptions/* 
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket # For the lambda to read the transcription file
+            Resource: arn:aws:s3:::some-bucket-name
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
+              - s3:GetObject # For the lambda to read the transcription file
+              - s3:HeadObject # For the lambda to read the transcription file
+            Resource: arn:aws:s3:::some-bucket-name/transcriptions/* 
+
+  AudioToCleanTxtTranscription:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/transcription_audio_to_clean_txt.asl.json
+      DefinitionSubstitutions:
+        FlattenS3TagSetLambdaArn: !GetAtt FlattenS3TagSetLambda.Arn
+        TranscriptionToCleanTxtLambdaArn: !GetAtt TranscriptionToCleanTxtLambda.Arn
+      # Policies that allow the AWS StepFunction state machine to invoke whatever it needs to
+      # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FlattenS3TagSetLambda
+        - LambdaInvokePolicy:
+            FunctionName: !Ref TranscriptionToCleanTxtLambda
+        - Statement: # For the steps that start the AWS Transcribe transcription job and watch/wait for it
+            Effect: Allow
+            Action:
+              - transcribe:StartTranscriptionJob
+              - transcribe:GetTranscriptionJob
+            Resource: arn:aws:transcribe:eu-west-3:123456789123:transcription-job/*
+        # - S3ReadPolicy:
+        #     BucketName: "some-bucket-name"
+        - Statement: # For the step that get the recording object tags
+            Effect: Allow
+            Action:
+              - s3:GetObjectTagging
+            Resource: arn:aws:s3:::some-bucket-name/raw-recordings/*
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+Outputs:
+  # TranscriptionSAudioToCleanTxtTranscriptionHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  AudioToCleanTxtTranscriptionArn:
+    Description: Stock Trading State machine ARN
+    Value: !Ref AudioToCleanTxtTranscription
