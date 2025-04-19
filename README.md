@@ -71,19 +71,16 @@ pactl load-module module-loopback source=virtual_output_for_recording_purpose.mo
 magicalrecord: aliased to ffmpeg -f pulse -i virtual_output_for_recording_purpose.monitor -f pulse -i alsa_input.pci-0000_07_00.6.HiFi__Mic1__source -filter_complex "[0:a]aresample=sample_rate=44100,volume=1[a0];[1:a]aresample=sample_rate=44100,volume=3[a1];[a0][a1]amix=inputs=2"  -ac 2
 ```
 
-TODO later add:
+## (more) Internals
 
-- Sam for reaction on S3
+- TMA;DL uses [the `InvokeModel`
+  API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html)
+  from the Bedrock Runtime - _**not** the Converse API or something else_
+- Doc for the Claude message API format that we format for: <https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html>
+- As of now, configured to have a high number of output tokens + timeout to
+  support long meetings/discussions
+
 - Ratatui or other for the dynamic termui?
-
-https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html
-- Uses the `InvokeModel` API from the Bedrock Runtime - _**not** the Converse
-  API or something else_
-- Claude message API format
-https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html
-- High number of tokens + timeout to support long meetings
-
-
 - id+date must be unique
 - ID can be duplicate
 - Files will be name as date_id.whateverextension
