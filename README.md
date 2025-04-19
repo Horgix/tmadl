@@ -59,6 +59,18 @@ StepFunction](./tmadl-transcription-audio-to-clean-txt/docs/stepfunction.png)
 - **AWS Transcribe** to do the audio transcription to text
 - **AWS Bedrock** to do the transcriptions summarization on-demand
 
+## Misc
+
+In order to record locally whatever input/output (e.g. in online calls not
+recorded by whatever tool used for the call itself) on Linux (adapt to your own
+setup):
+
+```sh
+pactl load-module module-null-sink sink_name=virtual_output_for_recording_purpose
+pactl load-module module-loopback source=virtual_output_for_recording_purpose.monitor
+magicalrecord: aliased to ffmpeg -f pulse -i virtual_output_for_recording_purpose.monitor -f pulse -i alsa_input.pci-0000_07_00.6.HiFi__Mic1__source -filter_complex "[0:a]aresample=sample_rate=44100,volume=1[a0];[1:a]aresample=sample_rate=44100,volume=3[a1];[a0][a1]amix=inputs=2"  -ac 2
+```
+
 TODO later add:
 
 - Sam for reaction on S3
@@ -71,15 +83,6 @@ https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.
 https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html
 - High number of tokens + timeout to support long meetings
 
-
-```
-magicalrecord: aliased to ffmpeg -f pulse -i virtual_output_for_recording_purpose.monitor -f pulse -i alsa_input.pci-0000_07_00.6.HiFi__Mic1__source -filter_complex "[0:a]aresample=sample_rate=44100,volume=1[a0];[1:a]aresample=sample_rate=44100,volume=3[a1];[a0][a1]amix=inputs=2"  -ac 2
-```
-
-```
-pactl load-module module-null-sink sink_name=virtual_output_for_recording_purpose
-pactl load-module module-loopback source=virtual_output_for_recording_purpose.monitor
-```
 
 - id+date must be unique
 - ID can be duplicate
