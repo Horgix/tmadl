@@ -10,7 +10,7 @@ discussion recordings with IA from your terminal/CLI.
 
 ## The gist of it
 
-The workflow that enable TMA;DL is essentially:
+The workflow that TMA;DL enables is essentially:
 
 1. **Record** a meeting or discussion —  _no matter if it's through the native
    GMeet feature, a local `ffmpeg` command (soon to be wrapped in `tmadl
