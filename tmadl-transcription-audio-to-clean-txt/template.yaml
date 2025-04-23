@@ -103,10 +103,16 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
               - s3:GetObject # For the lambda to read the transcription file
               - s3:HeadObject # For the lambda to read the transcription file
             Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawTranscriptionsPrefix}/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
+            Resource:
+              - !Sub arn:aws:s3:::${AssetsBucket}/${RawTranscriptionsPrefix}/*
+              - !Sub arn:aws:s3:::${AssetsBucket}/${CleanTranscriptionsPrefix}/*
         - Statement:
             Effect: Allow
             Action:
