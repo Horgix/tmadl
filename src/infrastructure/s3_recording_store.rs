@@ -7,7 +7,7 @@ use tokio;
 use crate::domain::recording_store::RecordingStore;
 use crate::domain::recording::Recording;
 
-static S3_RAW_RECORDINGS_PATH: &str = "raw-recordings/";
+static S3_RAW_RECORDINGS_PATH: &str = "recordings-raw/";
 
 pub struct S3RecordingStore {
     bucket: String,
