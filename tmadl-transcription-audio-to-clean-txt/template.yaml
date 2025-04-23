@@ -110,8 +110,6 @@ Resources:
               - transcribe:StartTranscriptionJob
               - transcribe:GetTranscriptionJob
             Resource: !Sub arn:aws:transcribe:${AWS::Region}:${AWS::AccountId}:transcription-job/*
-        # - S3ReadPolicy:
-        #     BucketName: "some-bucket-name"
         - Statement: # For the step that get the recording object tags
             Effect: Allow
             Action:
