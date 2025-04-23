@@ -14,9 +14,23 @@ Globals:
       LogFormat: JSON
   Api:
     TracingEnabled: true
-Parameters
-  BucketName:
+
+Parameters:
+  AssetsBucket:
     Type: String
+    Description: The name of the S3 bucket where the audio files and transcriptions will be stored
+  RawRecordingsPrefix:
+    Type: String
+    Default: recordings-raw
+    Description: The prefix for the S3 bucket where the audio files will be stored
+  RawTranscriptionsPrefix:
+    Type: String
+    Default: transcriptions-raw
+    Description: The prefix for the S3 bucket where the transcriptions will be stored
+  CleanTranscriptionsPrefix:
+    Type: String
+    Default: transcriptions-clean
+    Description: The prefix for the S3 bucket where the processed transcriptions will be stored
 
 Resources:
   TriggerTranscriptionStateMachineEventRule:
@@ -62,26 +76,19 @@ Resources:
             Effect: Allow
             Action:
               - s3:getObject
-            Resource: arn:aws:s3:::some-bucket-name/raw-recordings/*
-      - Statement:
-          Effect: Allow
-          Action:
-            - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
-            - s3:GetObject # For the lambda to read the transcription file
-            - s3:HeadObject # For the lambda to read the transcription file
-          Resource: arn:aws:s3:::some-bucket-name/transcriptions/* 
-        - Statement:
-            Effect: Allow
-            Action:
-              - s3:ListBucket # For the lambda to read the transcription file
-            Resource: arn:aws:s3:::some-bucket-name
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
         - Statement:
             Effect: Allow
             Action:
               - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
               - s3:GetObject # For the lambda to read the transcription file
               - s3:HeadObject # For the lambda to read the transcription file
-            Resource: arn:aws:s3:::some-bucket-name/transcriptions/* 
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawTranscriptionsPrefix}/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket # For the lambda to read the transcription file
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}
 
   AudioToCleanTxtTranscription:
     Type: AWS::Serverless::StateMachine
@@ -102,14 +109,14 @@ Resources:
             Action:
               - transcribe:StartTranscriptionJob
               - transcribe:GetTranscriptionJob
-            Resource: arn:aws:transcribe:eu-west-3:123456789123:transcription-job/*
+            Resource: !Sub arn:aws:transcribe:${AWS::Region}:${AWS:AccountId}:transcription-job/*
         # - S3ReadPolicy:
         #     BucketName: "some-bucket-name"
         - Statement: # For the step that get the recording object tags
             Effect: Allow
             Action:
               - s3:GetObjectTagging
-            Resource: arn:aws:s3:::some-bucket-name/raw-recordings/*
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
