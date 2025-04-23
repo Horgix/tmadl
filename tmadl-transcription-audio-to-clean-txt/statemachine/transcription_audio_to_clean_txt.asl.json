@@ -65,7 +65,7 @@
                 },
                 "TranscriptionJobName.$": "States.Format('horgix-transcription_{}_{}', $.tags.recording_id, States.UUID())",
                 "OutputBucketName.$": "$.bucket.name",
-                "OutputKey.$": "States.Format('transcriptions/{}.json', 'YAY')",
+                "OutputKey.$": "States.Format('transcriptions-raw/{}.json', 'TEST-01')",
                 "LanguageCode": "fr-FR",
                 "Settings": {
                     "ShowSpeakerLabels": true,
