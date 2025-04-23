@@ -7,7 +7,6 @@ Description: >
   - Take an audio file from S3
   - Transcribe it using AWS Transcribe
   - Clean the JSON resulting from AWS Transcribe into a cleaner per-speaker text file
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Tracing: Active
@@ -45,14 +44,14 @@ Resources:
               - prefix: raw-recordings/
 
   FlattenS3TagSetLambda:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/flatten_s3_tagset/
       Handler: app.lambda_handler
       Runtime: python3.10
 
   TranscriptionToCleanTxtLambda:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/aws_transcription_to_clean_txt/
       Handler: app.lambda_handler
@@ -85,7 +84,7 @@ Resources:
             Resource: arn:aws:s3:::some-bucket-name/transcriptions/* 
 
   AudioToCleanTxtTranscription:
-    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Type: AWS::Serverless::StateMachine
     Properties:
       DefinitionUri: statemachine/transcription_audio_to_clean_txt.asl.json
       DefinitionSubstitutions:
