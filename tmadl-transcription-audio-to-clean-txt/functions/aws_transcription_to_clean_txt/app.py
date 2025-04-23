@@ -5,6 +5,10 @@ import boto3
 import tempfile
 import os
 
+# TODO Take this as input config (from environment)
+# RAW_TRANSCRIPTIONS_PREFIX = "transcriptions-raw" # Unused
+CLEAN_TRANSCRIPTIONS_PREFIX = "transcriptions-clean"
+
 def convert_to_txt_file(json_file):
     """
     Convert the JSON output of Amazon Transcribe to plaintext format, and write it to a file.
@@ -147,7 +151,7 @@ def lambda_handler(raw_event, context):
         transcription_job_name_txt = f"{file_basename}.txt"
         s3_client.upload_file(local_transcript_output_file,
                               bucket_name,
-                              f"transcriptions/{file_basename}.txt")
+                              f"{CLEAN_TRANSCRIPTIONS_PREFIX}/{file_basename}.txt")
         logger.info(f"Uploaded TXT")
     except Exception as e:
         logger.error(f"Error uploading txt file to S3: {e}")
@@ -157,7 +161,7 @@ def lambda_handler(raw_event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "transcription_file": f"s3://{bucket_name}/transcriptions/{file_basename}.txt",
+            "transcription_file": f"s3://{bucket_name}/{CLEAN_TRANSCRIPTIONS_PREFIX}/{file_basename}.txt",
         }),
         "headers": {
             "Content-Type": "application/json"
