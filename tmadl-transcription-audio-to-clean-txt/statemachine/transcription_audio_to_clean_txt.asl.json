@@ -9,26 +9,18 @@
                     "Next": "GetObjectTagging",
                     "And": [
                         {
-                            "Variable": "$.Records",
-                            "IsPresent": true
+                            "Variable": "$.source",
+                            "StringMatches": "aws.s3"
                         },
                         {
-                            "Variable": "$.Records[1]",
-                            "IsPresent": false
-                        },
-                        {
-                            "Variable": "$.Records[0].s3",
-                            "IsPresent": true
-                        },
-                        {
-                            "Variable": "$.Records[0].eventName",
-                            "StringMatches": "ObjectCreated:*"
+                            "Variable": "$.detail-type",
+                            "StringMatches": "Object Created"
                         }
                     ]
                 }
             ],
-            "OutputPath": "$.Records[0].s3",
-            "Comment": "Check that the received event is an `ObjectCreated` one from S3, and that it contains only exactly what we expect. Also only keeps the subelement we really care about for next steps (the `s3` part)."
+            "Comment": "Check that the EventBridge received event is an `ObjectCreated` one from S3. Also only keeps the subelement we really care about for next steps (the `detail` part).",
+            "OutputPath": "$.detail"
         },
         "GetObjectTagging": {
             "Type": "Task",
