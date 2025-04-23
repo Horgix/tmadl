@@ -33,11 +33,34 @@ Parameters:
     Description: The prefix for the S3 bucket where the processed transcriptions will be stored
 
 Resources:
+  TriggerSummaryGeneratorStateMachineEventRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Sid: EventBridgeAccess
+          Effect: Allow
+          Principal:
+            Service:
+              - events.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionsPermissions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource:
+                  - !GetAtt AudioToCleanTxtTranscription.Arn
+
   TriggerTranscriptionStateMachineEventRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: audio-upload-to-s3-trigger-stepfunction
-      Description: Invokes the summary generator state machine when a recording is
+      Name: tmadl-audio-upload-to-s3-trigger-stepfunction
+      Description: Invokes the audio-to-clean-txt Step Function when a recording is
         put in the asset bucket recordings folder
       State: ENABLED
       Targets:
@@ -52,10 +75,10 @@ Resources:
         detail:
           bucket:
             name:
-              - !Ref AssetBucket
+              - !Ref AssetsBucket
           object:
             key:
-              - prefix: raw-recordings/
+              - prefix: !Ref RawRecordingsPrefix
 
   FlattenS3TagSetLambda:
     Type: AWS::Serverless::Function
