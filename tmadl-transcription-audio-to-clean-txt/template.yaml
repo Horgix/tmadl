@@ -76,19 +76,19 @@ Resources:
             Effect: Allow
             Action:
               - s3:getObject
-            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
+            Resource: !Sub arn:aws:s3:${AWS::Region}:${AWS:AccountId}:${AssetsBucket}/${RawRecordingsPrefix}/*
         - Statement:
             Effect: Allow
             Action:
               - s3:PutObject # For AWS Transcribe to write the transcription file, and for the lambda to write the clean txt file
               - s3:GetObject # For the lambda to read the transcription file
               - s3:HeadObject # For the lambda to read the transcription file
-            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawTranscriptionsPrefix}/*
+            Resource: !Sub arn:aws:s3:${AWS::Region}:${AWS:AccountId}:${AssetsBucket}/${RawTranscriptionsPrefix}/*
         - Statement:
             Effect: Allow
             Action:
               - s3:ListBucket # For the lambda to read the transcription file
-            Resource: !Sub arn:aws:s3:::${AssetsBucket}
+            Resource: !Sub arn:aws:s3:${AWS::Region}:${AWS:AccountId}:${AssetsBucket}
 
   AudioToCleanTxtTranscription:
     Type: AWS::Serverless::StateMachine
@@ -116,7 +116,7 @@ Resources:
             Effect: Allow
             Action:
               - s3:GetObjectTagging
-            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
+            Resource: !Sub arn:aws:s3:${AWS::Region}:${AWS:AccountId}:${AssetsBucket}/${RawRecordingsPrefix}/*
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
