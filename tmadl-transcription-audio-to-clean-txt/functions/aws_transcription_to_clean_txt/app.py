@@ -140,7 +140,7 @@ def lambda_handler(raw_event, context):
 
     # Convert to a clean txt file with per-speaker lines
     transcript_content, local_transcript_output_file = convert_to_txt_file(f"/tmp/{file_basename}.json")
-    if not local_transcript_output_file or not os.path.exists(transcript_output_file):
+    if not local_transcript_output_file or not os.path.exists(local_transcript_output_file):
         logger.error("Error converting transcription to txt file")
         exit
 
