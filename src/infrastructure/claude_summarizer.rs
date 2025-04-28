@@ -124,8 +124,12 @@ impl ClaudeSummarizer {
             Ok(output) => {
                 let output_blob: Vec<u8> = output.body().clone().into();
                 let output_json = String::from_utf8(output_blob).unwrap();
-                println!("Output: {}", output_json);
+                println!("Output JSON: {}", output_json);
+                let output_string: serde_json::Value = serde_json::from_str(&output_json).unwrap();
+                let output_string = output_string["content"][0]["text"].as_str().unwrap();
+                println!("Output:\n{}", output_string);
                 output_json
+
             }
             Err(err) => {
                 println!("Error: {:?}", err);
