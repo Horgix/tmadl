@@ -96,13 +96,17 @@ fn main() {
                 transcription: None,
             };
 
+            // Read transcript from the /tmp/transcript.txt file
+            let transcript = std::fs::read_to_string("/tmp/transcript.txt").unwrap();
+
             let input = get_prompt(
                 domain::summary::SummaryRequest {
                     recording: mock_recording,
                     additional_context: Some(vec![
                         "FIXME_THIS_IS_A_PLACEHOLDER".to_string(),
                     ]),
-                }
+                },
+                transcript,
             );
             let claude_summarizer = claude_summarizer::ClaudeSummarizer::new();
             claude_summarizer.summarize(input.as_str());

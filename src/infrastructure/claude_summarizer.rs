@@ -13,7 +13,7 @@ static PROMPT_FRAGMENT_MULTI_SPEAKERS: &str = r#"Speakers in the transcript coul
 static PROMPT_FRAGMENT_SINGLE_SPEAKER: &str = r#"The transcript features a single speaker who recorded themselves in order to get a transcribe and summary."#;
 static PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX: &str = r#"Additional notes for you to take into account:"#;
 
-pub fn get_prompt(summary_request: SummaryRequest) -> String {
+pub fn get_prompt(summary_request: SummaryRequest, transcript: String) -> String {
     // If the summary_request's recording contains a description, or if theyre's
     // any additional_context, build a list of strings merging both into a  ist with '- ' as a string
     // and join them with '\n' to create a bullet point list.
@@ -46,7 +46,7 @@ pub fn get_prompt(summary_request: SummaryRequest) -> String {
 {additional_notes}
 
 Transcript:
-TODO
+{transcript}
 ");
     println!("{}", prompt);
     prompt
