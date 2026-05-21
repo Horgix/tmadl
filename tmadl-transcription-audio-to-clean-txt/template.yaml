@@ -35,7 +35,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: payfit-dev-horgix-transcriptions-2025-eu-west-3-v2
+      BucketName: FIXME
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: true
@@ -173,17 +173,6 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
-      Tags:
-        - Key: "payfit.net/team"
-          Value: dre
-        - Key: "payfit.net/managed-by"
-          Value: sam
-        - Key: "payfit.net/created-by"
-          Value: alexis.chotard
-        - Key: "payfit.net/description"
-          Value: personal-notes-summarizing-tooling
-        - Key: "payfit.net/env"
-          Value: dev
 
   ApplicationInsightsMonitoring:
     Type: AWS::ApplicationInsights::Application
@@ -191,17 +180,6 @@ Resources:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: 'true'
-      Tags:
-        - Key: "payfit.net/team"
-          Value: dre
-        - Key: "payfit.net/managed-by"
-          Value: sam
-        - Key: "payfit.net/created-by"
-          Value: alexis.chotard
-        - Key: "payfit.net/description"
-          Value: personal-notes-summarizing-tooling
-        - Key: "payfit.net/env"
-          Value: dev
 
 Outputs:
   # TranscriptionSAudioToCleanTxtTranscriptionHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
