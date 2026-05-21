@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   tmadl-transcription-audio-to-clean-txt
@@ -12,6 +12,7 @@ Globals:
     Tracing: Active
     LoggingConfig:
       LogFormat: JSON
+
   Api:
     TracingEnabled: true
 
@@ -39,6 +40,7 @@ Resources:
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: true
+
   TriggerSummaryGeneratorStateMachineEventRuleRole:
     Type: AWS::IAM::Role
     Properties:
@@ -66,7 +68,8 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: tmadl-audio-upload-to-s3-trigger-stepfunction
-      Description: Invokes the audio-to-clean-txt Step Function when a recording is
+      Description:
+        Invokes the audio-to-clean-txt Step Function when a recording is
         put in the asset bucket recordings folder
       State: ENABLED
       Targets:
@@ -179,7 +182,7 @@ Resources:
     Properties:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
-      AutoConfigurationEnabled: 'true'
+      AutoConfigurationEnabled: "true"
 
 Outputs:
   # TranscriptionSAudioToCleanTxtTranscriptionHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
