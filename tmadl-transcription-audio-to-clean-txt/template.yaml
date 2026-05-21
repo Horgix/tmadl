@@ -16,9 +16,6 @@ Globals:
     TracingEnabled: true
 
 Parameters:
-  AssetsBucket:
-    Type: String
-    Description: The name of the S3 bucket where the audio files and transcriptions will be stored
   RawRecordingsPrefix:
     Type: String
     Default: recordings-raw
@@ -33,6 +30,15 @@ Parameters:
     Description: The prefix for the S3 bucket where the processed transcriptions will be stored
 
 Resources:
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: payfit-dev-horgix-transcriptions-2025-eu-west-3-v2
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
   TriggerSummaryGeneratorStateMachineEventRuleRole:
     Type: AWS::IAM::Role
     Properties:
@@ -144,6 +150,21 @@ Resources:
             Action:
               - s3:GetObjectTagging
             Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
+        - Statement: # For Transcribe's permission pre-check on the input audio and output location
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawRecordingsPrefix}/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}/${RawTranscriptionsPrefix}/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${AssetsBucket}
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -152,16 +173,43 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
+      Tags:
+        - Key: "payfit.net/team"
+          Value: dre
+        - Key: "payfit.net/managed-by"
+          Value: sam
+        - Key: "payfit.net/created-by"
+          Value: alexis.chotard
+        - Key: "payfit.net/description"
+          Value: personal-notes-summarizing-tooling
+        - Key: "payfit.net/env"
+          Value: dev
+
   ApplicationInsightsMonitoring:
     Type: AWS::ApplicationInsights::Application
     Properties:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: 'true'
+      Tags:
+        - Key: "payfit.net/team"
+          Value: dre
+        - Key: "payfit.net/managed-by"
+          Value: sam
+        - Key: "payfit.net/created-by"
+          Value: alexis.chotard
+        - Key: "payfit.net/description"
+          Value: personal-notes-summarizing-tooling
+        - Key: "payfit.net/env"
+          Value: dev
+
 Outputs:
   # TranscriptionSAudioToCleanTxtTranscriptionHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
   # Find out more about other implicit resources you can reference within SAM
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
   AudioToCleanTxtTranscriptionArn:
-    Description: Stock Trading State machine ARN
+    Description: Audio transcription
     Value: !Ref AudioToCleanTxtTranscription
+  AssetsBucketName:
+    Description: Name of the S3 bucket for audio files and transcriptions
+    Value: !Ref AssetsBucket
