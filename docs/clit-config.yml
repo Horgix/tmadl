@@ -1,0 +1,21 @@
+name: tmadl
+version: "0.1"
+author: Alexis Horgix Chotard <tmadl@foss.horgix.fr>
+about:  TMA;DL (Too Much Audio, Didn't Listen) — A terminal/CLI meetings & discussions recordings processor using AI 
+settings:
+  - ArgRequiredElseHelp
+args:
+  - debug:
+      short: d
+      long: debug
+      help: Full debug mode. Prints and local endpoints
+subcommands:
+    - recording:
+        about: 'Manage meeting/conversation recording(s). Default will help'
+        version: "0.1"
+        subcommands:
+          - upload:
+              about: Send a local recording to S3.
+              alias: send
+        settings:
+          - ArgRequiredElseHelp
