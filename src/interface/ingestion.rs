@@ -1,11 +1,13 @@
+use crate::domain::recording::Recording;
+use chrono::DateTime;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::path::Path;
-use chrono::DateTime;
-use crate::domain::recording::Recording;
 
-pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Result<Recording, Box<dyn Error>> {
+pub fn parse_recording_information_from_local_mp3_file(
+    file_path: &str,
+) -> Result<Recording, Box<dyn Error>> {
     // Use the file basename as the recording ID by default, but prompt user for a different ID if desired
     let file_name = Path::new(file_path).file_name().unwrap().to_str().unwrap();
     let recording_id = file_name.split('.').next().unwrap().to_string();
@@ -38,7 +40,6 @@ pub fn parse_recording_information_from_local_mp3_file(file_path: &str) -> Resul
         new_date_time.with_timezone(&chrono::Utc)
     };
     println!("Recording date and time: {}", created_at);
-
 
     // Prompt user for recording source. Default to "Google Meet"
     println!("Recording source (default: gmeet):");

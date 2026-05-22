@@ -6,48 +6,57 @@ use serde_json::json;
 use crate::domain::recording::Recording;
 use crate::domain::summary::SummaryRequest;
 
-static MODEL : &str = "eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
+static MODEL: &str = "eu.anthropic.claude-3-7-sonnet-20250219-v1:0";
 
 static PROMPT_FRAGMENT_GENERIC_SUMMARY_REQUEST: &str = r#"Summarize the following transcript into clear and readable bullet points with a couple of paragraphs around to introduce the topic and wrap it up."#;
 static PROMPT_FRAGMENT_MULTI_SPEAKERS: &str = r#"Speakers in the transcript could be denoted by their name, or by "spk_x", where `x` is a number. These represent distinct speakers in the conversation. When you refer to a speaker, you may refer to them by "Speaker 1" #in the case of "spk_1", "Speaker 2" in the case of "spk_2", and so forth."#;
 static PROMPT_FRAGMENT_SINGLE_SPEAKER: &str = r#"The transcript features a single speaker who recorded themselves in order to get a transcribe and summary."#;
-static PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX: &str = r#"Additional notes for you to take into account:"#;
+static PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX: &str =
+    r#"Additional notes for you to take into account:"#;
 
 pub fn get_prompt(summary_request: SummaryRequest, transcript: String) -> String {
     // If the summary_request's recording contains a description, or if theyre's
     // any additional_context, build a list of strings merging both into a  ist with '- ' as a string
     // and join them with '\n' to create a bullet point list.
-    let additional_notes =  if  summary_request.recording.description.is_some() || summary_request.additional_context.is_some() {
+    let additional_notes = if summary_request.recording.description.is_some()
+        || summary_request.additional_context.is_some()
+    {
         let description_note = match summary_request.recording.description {
             Some(description) => {
                 vec![format!("This recording is about: {}", description)]
-            },
+            }
             None => {
                 vec![]
             }
         };
         let list_of_additional_notes = [
             description_note,
-            summary_request.additional_context.unwrap_or(vec![])
-            ].concat()
-            .iter()
-            .map(|note| format!("- {}", note))
-            .collect::<Vec<String>>()
-            .join("\n");
-        format!("{}\n{}", PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX, list_of_additional_notes)
-        } else {
-            "".to_string()
-        };
+            summary_request.additional_context.unwrap_or(vec![]),
+        ]
+        .concat()
+        .iter()
+        .map(|note| format!("- {}", note))
+        .collect::<Vec<String>>()
+        .join("\n");
+        format!(
+            "{}\n{}",
+            PROMPT_FRAGMENT_ADDITIONAL_NOTES_PREFIX, list_of_additional_notes
+        )
+    } else {
+        "".to_string()
+    };
 
     //format!("Model: {}", MODEL)
-    let prompt = format!("
+    let prompt = format!(
+        "
 {PROMPT_FRAGMENT_GENERIC_SUMMARY_REQUEST}
 {PROMPT_FRAGMENT_MULTI_SPEAKERS}
 {additional_notes}
 
 Transcript:
 {transcript}
-");
+"
+    );
     println!("{}", prompt);
     prompt
 }
@@ -60,9 +69,7 @@ pub struct ClaudeSummarizer {
 impl ClaudeSummarizer {
     #[tokio::main(flavor = "current_thread")]
     pub async fn new() -> ClaudeSummarizer {
-        let config = aws_config::defaults(BehaviorVersion::latest())
-                .load()
-                .await;
+        let config = aws_config::defaults(BehaviorVersion::latest()).load().await;
         let client = BedrockClient::new(&config);
 
         ClaudeSummarizer {
@@ -89,30 +96,31 @@ impl ClaudeSummarizer {
         //         .build()
         //         .map_err(|_| "failed to build message").unwrap();
         let bedrock_claude_input = json!(
-            [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": input
-                        }
-                    ]
-                }
-            ]);
+        [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": input
+                    }
+                ]
+            }
+        ]);
 
         let model_parameters = json!({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 20000,
-                "system": "You are an AI assistant that excels at summarizing conversations.",
-                "messages": bedrock_claude_input,
-                "temperature": 1.0,
-                "top_p": 0.999,
-                "top_k": 40,
-            });
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 20000,
+            "system": "You are an AI assistant that excels at summarizing conversations.",
+            "messages": bedrock_claude_input,
+            "temperature": 1.0,
+            "top_p": 0.999,
+            "top_k": 40,
+        });
 
         print!("Model parameters: {}", model_parameters.to_string());
-        let response = self.client
+        let response = self
+            .client
             .invoke_model()
             .model_id(self.model.to_owned())
             .body(Blob::new(model_parameters.to_string().as_bytes().to_vec()))
@@ -129,7 +137,6 @@ impl ClaudeSummarizer {
                 let output_string = output_string["content"][0]["text"].as_str().unwrap();
                 println!("Output:\n{}", output_string);
                 output_json
-
             }
             Err(err) => {
                 println!("Error: {:?}", err);
