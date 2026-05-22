@@ -56,6 +56,27 @@ impl S3RecordingStore {
         }
         if let Some(language) = &recording.language {
             tags.insert("language".to_string(), language.to_string());
+            // We need a language code for AWS Transcribe.
+            // We favor keeping the user-friendly language name in the
+            // input/interface, but map it to the language code here.
+            // This could be improved by either:
+            // - Having a more generic / proper (likely lib-based) mapping for
+            // virtually any language (not just English and French)
+            // - OR Moving this mapping/check to the StepFunction so we don't
+            // prevent users from uploading recording in any language - and
+            // Transcribe only the supported languages
+            let language_code = match language.to_lowercase().as_str() {
+                "english" | "en" => "en-US",
+                "french" | "fr" => "fr-FR",
+                _ => {
+                    return Err(format!(
+                        "Unsupported language: {}. Only English and French are supported.",
+                        language
+                    )
+                    .into());
+                }
+            };
+            tags.insert("language_code".to_string(), language_code.to_string());
         }
 
         let mut s3_tags = aws_sdk_s3::types::Tagging::builder();
