@@ -17,6 +17,9 @@ Globals:
     TracingEnabled: true
 
 Parameters:
+  BucketName:
+    Type: String
+    Description: Name of the S3 bucket where audio files and transcriptions are stored
   RawRecordingsPrefix:
     Type: String
     Default: recordings-raw
@@ -36,7 +39,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: FIXME
+      BucketName: !Ref BucketName
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: true
