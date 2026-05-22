@@ -46,6 +46,10 @@ Options:
   -V, --version  Print version
 ```
 
+## The main flow
+
+![TMA;DL main flow](./docs/main-flow.png)
+
 ## The StepFunction
 
 ![TMA;DL audio transcription to clean txt through AWS
